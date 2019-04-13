@@ -23,6 +23,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+build/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -56,6 +57,9 @@ artifacts/
 
 # StyleCop
 StyleCopReport.xml
+
+# Files built by GCC
+*.o
 
 # Files built by Visual Studio
 *_i.c

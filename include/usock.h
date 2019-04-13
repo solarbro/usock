@@ -71,8 +71,8 @@ typedef struct usock_addr_info
 */
 typedef union usock_socket_handle
 {
-	unsigned __int64 winsock;
-	int              posixsock;
+	void  *winsock;
+	int    posixsock;
 } usock_socket_handle;
 
 typedef struct usock_socket

@@ -3,6 +3,7 @@ Platform agnostic networking API
 
 ## How to build
 use make with one of the following arguments:
+
 | Argument | Description |
 |----------|-------------|
 | | Build the full usock lib into an archive. |

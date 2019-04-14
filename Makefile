@@ -1,6 +1,7 @@
 #No ldflags yet
 INC = -Iinclude
 CFLAGS = $(INC) -Wall -Werror
+CXXFLAGS = $(INC) -Wall -Werror
 
 csrc = $(wildcard src/*.c)
 ccsrc = $(wildcard src/*.cc)
@@ -22,9 +23,11 @@ $(builddir)/usock-lite.a: $(obj)
 testobj = $(wildcard test/*.o)
 
 $(builddir)/TestClient: $(obj) test/TestClient.o
+	mkdir -p build
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(builddir)/TestServer: $(obj) test/TestServer.o
+	mkdir -p build
 	$(CC) -o $@ $^ $(CFLAGS)
 
 #clean up build artefacts

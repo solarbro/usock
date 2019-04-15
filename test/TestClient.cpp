@@ -17,10 +17,11 @@ int main(int argc, char const *argv[])
     const char *hello = "Hello, Server!"; 
     char buffer[DEFAULT_BUFLEN] = {0}; 
 
-	if(argc < 2)
+	const char *ip = "127.0.0.1";
+
+	if(argc >= 2)
 	{
-		printf("Usage: TestClient [ip address]\n");
-		return 1;
+		ip = argv[1];
 	}
 
 	usock_initialize();
@@ -29,7 +30,7 @@ int main(int argc, char const *argv[])
 	usock_configure(sock, USOCK_DOMAIN_IPV4, USOCK_SOCKTYPE_RELIABLE);
 	
 	/* connect */
-	iResult = usock_connect(sock, argv[1], PORT);
+	iResult = usock_connect(sock, ip, PORT);
 	if(iResult != USOCK_OK)
 	{
 		printf("Connect failed\n");

@@ -3,6 +3,7 @@
 #include <string>
 #include <string.h>
 #include <unordered_map>
+#include <thread>
 
 #define BUILDDIR "build"
 
@@ -110,19 +111,55 @@ Test::Result RunTest(const std::string &name, const Test &test)
 	{
 		if(ret != 0)
 		{
+			printf("Test failed!\n");
 			return Test::FAIL_TEST;
 		}
 	}
 	return Test::PASS;
 }
 
+constexpr size_t cmdlen = 256;
+
 int BuildTestTargets(const Test &test)
 {
+	char cmd[cmdlen] = {0};
 	//Run the required make commands
-	return 0;
+	for(const auto &target : test.targets)
+	{
+		snprintf(cmd, cmdlen, "make %s", target);
+		int buildRes = system(cmd);
+		if(buildRes > 0)
+			return Test::FAIL_BUILD;
+	}
+	return Test::PASS;
 }
+
+void CmdTest(const char *cmd, int *result);
 
 void RunTestTargets(const Test &test, std::vector<int> &results)
 {
+	//Launch each target in its own thread
+	std::vector<std::thread> processThreads(test.targets.size());
+	results.resize(test.targets.size());
+	for(size_t i = 0; i < results.size(); ++i)
+	{
+		const char *target = test.targets[i];
+		char cmd[cmdlen] = {0};
+		snprintf(cmd, cmdlen, "./%s", target);
+		processThreads[i] = std::thread(CmdTest, cmd, &results[i]);
+		//Sleep for a short amount between launching tests, just in case.
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
 
+	//Wait for test to finish
+	for(std::thread &t : processThreads)
+	{
+		if(t.joinable())
+			t.join();
+	}
+}
+
+void CmdTest(const char *cmd, int *result)
+{
+	*result = system(cmd);
 }

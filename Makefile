@@ -32,7 +32,7 @@ $(builddir)/TestServer: $(obj) test/TestServer.o
 
 #build the test launcher tool
 usock-test: test/usock-test.o
-	clang++ -o $@ $^ $(CCFLAGS)
+	clang++ -o $@ $^ $(CCFLAGS) -lpthread
 
 #clean up build artefacts
 .PHONY: clean

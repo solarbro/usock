@@ -45,13 +45,14 @@ typedef enum
 
 /*
 * The network socket handle.
+* This is just an opaque pointer to an internal data structure.
 */
 typedef void * usock_handle;
 
 /*
 * Initialize the usock library.
 * This must be called before any other usock function.
-* \return - error code (see usock_err for more info)
+* \return - Error code (see usock_err for more info)
 */
 int usock_initialize();
 
@@ -59,13 +60,18 @@ int usock_initialize();
 * Release the usock library.
 * This should be the last usock function to be called.
 * Call this before exiting the program.
+* Note: This call will automatically cleanup and free all sockets
+* currently in use, so there's no need to explicitly cleanup any
+* of the sockets while exiting.
 */
 void usock_release();
 
 /*
 * Create a socket.
-* \param outSocket - the returned socket handle.
-* \return - error code (see usock_err for more info)
+* \param name - An optional string name for this socket.
+*               This can be useful for debugging.
+* \param pOutSock - The returned socket handle.
+* \return - Error code (see usock_err for more info)
 */
 int usock_create_socket(
 	const char       *name,
@@ -73,7 +79,10 @@ int usock_create_socket(
 );
 
 /*
-*	Configure the connection protocol.
+* Configure the connection protocol.
+* \param hsock - The socket handle (returned by usock_create_socket).
+* \param domain - The connection domain (see usock_domain for more info).
+* \param type - The connection type (see usock_socket_type for more info).
 */
 void usock_configure(
 	usock_handle hsock, 
@@ -83,14 +92,21 @@ void usock_configure(
 
 /*
 * Bind the server socket to the specified port.
+* \param hsock - The socket handle (returned by usock_create_socket).
+* \param port - The port number to bind the socket to.
+* \return - Error code (see usock_err for more info)
 */
 int usock_bind(
-	usock_handle hsocket, 
+	usock_handle hsock, 
 	unsigned     port
 );
 
 /*
 * Listen for incoming connections.
+* \param hsock - The socket handle (returned by usock_create_socket).
+* \param backlog - The maximum length that the queue of pending 
+*                  connections for this socket can grow to.
+* \return - Error code (see usock_err for more info)
 */
 int usock_listen(
 	usock_handle socket, 
@@ -98,7 +114,11 @@ int usock_listen(
 );
 
 /*
-*
+* Extract the first connection request from the pending connections queue
+* and create and return a socket for this connection.
+* \param hsock - The socket handle (returned by usock_create_socket).
+* \param pOutSock - The returned socket handle.
+* \return - Error code (see usock_err for more info)
 */
 int usock_accept(
 	usock_handle hsock, 
@@ -107,15 +127,23 @@ int usock_accept(
 
 /*
 * Connect to a server at the specified address and port.
+* \param hsock - The socket handle (returned by usock_create_socket).
+* \param ip_address - The ip address to connect to.
+* \param port - The port to connect to.
+* \return - Error code (see usock_err for more info)
 */
 int usock_connect(
-	usock_handle    socket,
+	usock_handle    hsock,
 	const char     *ip_address,
 	unsigned short  port
 );
 
 /*
-*
+* Read incoming data from the connected socket. This is a blocking call.
+* \param hsock - The socket handle (returned by usock_socket).
+* \param pOutBuffer - A buffer into which the incoming data will be put.
+* \param buflen - The size of the provided buffer.
+* \return - Error code (see usock_err for more info)
 */
 int usock_read(
 	usock_handle        hsock, 
@@ -124,23 +152,29 @@ int usock_read(
 );
 
 /*
-*
+* Send a block of data to the connected socket.
+* \param hsock - The socket handle (returned by usock_socket).
+* \param pBuffer - The buffer containing the data to be sent.
+* \param buflen - The number bytes to be sent.
+* \return - Error code (see usock_err for more info)
 */
 int usock_send(
 	usock_handle        hsock, 
-	const void         *buffer, 
+	const void         *pBuffer, 
 	unsigned long long  buflen
 );
 
 /*
-* Close the socket connection
+* Close the socket connection.
+* \param hsock - The socket handle (returned by usock_socket).
 */
 void usock_close_socket(
 	usock_handle socket
 );
 
 /* 
-* Release the memory allocated for this socket 
+* Release the memory associated with this socket.
+* \param hsock - The socket handle (returned by usock_socket).
 */
 void usock_free_socket(
 	usock_handle hsock

@@ -57,15 +57,12 @@ int main(int argc, const char *argv[])
 	}
 
 	memset(buffer, 0, sizeof(buffer));
-	printf("Start client read\n");
 	valread = usock_read(ClientSocket, buffer, DEFAULT_BUFLEN);
-	printf("Finish client read (%d bytes)\n", valread);
 
 	if(valread > 0)
 	{
 		printf("Message from client: %s\n", buffer);
 		reverseStr(buffer);
-		printf("Message from server: %s\n", buffer);
 		usock_send(ClientSocket, buffer, strlen(buffer));
 	}
 
@@ -74,8 +71,6 @@ int main(int argc, const char *argv[])
 
 	// cleanup
 	usock_release();
-
-	printf("Exiting server\n");
 
 	return 0;
 }

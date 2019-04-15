@@ -39,9 +39,7 @@ int main(int argc, char const *argv[])
 
 	/* Send */
     iResult = usock_send(sock , hello , strlen(hello)); 
-	if(iResult >= 0)
-		printf("Hello message sent (%d bytes)\n", iResult); 
-	else
+	if(iResult < 0)
 	{
 		printf("Send failed\n");
 		usock_release();

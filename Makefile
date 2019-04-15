@@ -9,6 +9,10 @@ obj = $(csrc:.c=.o) $(ccsrc:.cc=.o)
 
 builddir = build
 
+#build the test launcher tool
+usock-test: test/usock-test.o
+	clang++ -o $@ $^ $(CCFLAGS) -lpthread
+
 #build the full usock library into an archive
 $(builddir)/usock.a: $(obj)
 	mkdir -p $(builddir)
@@ -29,10 +33,6 @@ $(builddir)/TestClient: $(obj) test/TestClient.o
 $(builddir)/TestServer: $(obj) test/TestServer.o
 	mkdir -p $(builddir)
 	$(CC) -o $@ $^ $(CFLAGS)
-
-#build the test launcher tool
-usock-test: test/usock-test.o
-	clang++ -o $@ $^ $(CCFLAGS) -lpthread
 
 #clean up build artefacts
 .PHONY: clean

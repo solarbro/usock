@@ -62,10 +62,17 @@ int main(int argc, const char *argv[])
 	if(strcmp(argv[1], "all") == 0)
 	{
 		//Loop over all tests
+		bool fail = false;
 		for(const auto &test: tests)
 		{
-			RunTest(test.first, test.second);
+			int res = RunTest(test.first, test.second);
+			if(res != Test::PASS)
+			{
+				printf("Test %s FAILED.\n", test.first.c_str());
+				fail = true;
+			}
 		}
+		return fail ? 1 : 0;
 	}
 	else
 	{
@@ -78,11 +85,12 @@ int main(int argc, const char *argv[])
 			{
 				printf("\t%s\n", t.first.c_str());
 			}
-			return 0;
+			return 2;
 		}
 
 		//Run the test
-		RunTest(test->first, test->second);
+		int res = RunTest(test->first, test->second);
+		return res == Test::PASS ? 0 : 1;
 	}
 
 	return 0;

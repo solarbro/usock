@@ -15,8 +15,10 @@ use ```make``` with one of the following arguments:
 
 ## How to test
 The unit tests can be launched using the included integration test tool, once it's been built using ``` make ```.
+The tool will automatically build the unit tests it needs to run, so there's no need to manually build any of them.
+However, ```make``` needs to be installed and added to the system PATH for this to work.
 
-```cd``` to the root directory of the repository and run "```./usock-test arg```" to launch the specified test. ```arg``` can be one of the following:
+To use the tool, ```cd``` to the root directory of the repository and run "```./usock-test arg```" to launch the specified test, where ```arg``` can be one of the following:
 
 | arg | Description |
 |-----|-------------|

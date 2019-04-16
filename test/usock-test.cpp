@@ -63,12 +63,14 @@ int main(int argc, const char *argv[])
 	{
 		//Loop over all tests
 		bool fail = false;
+		int i = 0;
 		for(const auto &test: tests)
 		{
+			++i;
 			int res = RunTest(test.first, test.second);
+			printf("%4d. %s: %s\n", i, test.first.c_str(), res == Test::PASS ? "PASSED" : "FAILED");
 			if(res != Test::PASS)
 			{
-				printf("Test %s FAILED.\n", test.first.c_str());
 				fail = true;
 			}
 		}
@@ -90,6 +92,7 @@ int main(int argc, const char *argv[])
 
 		//Run the test
 		int res = RunTest(test->first, test->second);
+		printf("%4d. %s: %s\n", 1, argv[1], res == Test::PASS ? "PASSED" : "FAILED");
 		return res == Test::PASS ? 0 : 1;
 	}
 
@@ -101,7 +104,6 @@ void RunTestTargets(const Test &test, std::vector<int> &results);
 
 Test::Result RunTest(const std::string &name, const Test &test)
 {
-	printf("Running test %s\n", name.c_str());
 	//Build the required targets
 	if(BuildTestTargets(test) > 0)
 	{
@@ -113,13 +115,15 @@ Test::Result RunTest(const std::string &name, const Test &test)
 	std::vector<int> results;
 	RunTestTargets(test, results);
 
+	//Stall for a bit to allow the sockets to reset.
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+
 	//Check return code of each target
 	//All must be 0 for the test to pass.
 	for(int ret : results)
 	{
 		if(ret != 0)
 		{
-			printf("Test failed!\n");
 			return Test::FAIL_TEST;
 		}
 	}
@@ -134,7 +138,7 @@ int BuildTestTargets(const Test &test)
 	//Run the required make commands
 	for(const auto &target : test.targets)
 	{
-		snprintf(cmd, cmdlen, "make %s", target);
+		snprintf(cmd, cmdlen, "make -s %s", target);
 		int buildRes = system(cmd);
 		if(buildRes > 0)
 			return Test::FAIL_BUILD;

@@ -210,6 +210,7 @@ struct SockInfo
 
 	struct sockaddr_in info;
 	int protocol;
+	unsigned sockopt;
 
 	struct SockInfo *prev, *next;
 };
@@ -287,7 +288,7 @@ int usock_create_socket(const char *name, usock_handle *pOutSocket)
 	return USOCK_OK;
 }
 
-void usock_configure(usock_handle hsock, usock_domain domain, usock_socket_type type)
+void usock_configure(usock_handle hsock, usock_domain domain, usock_socket_type type, uint32_t flags)
 {
 	struct SockInfo *info = (struct SockInfo*)hsock;
 	switch(domain)
@@ -312,11 +313,15 @@ void usock_configure(usock_handle hsock, usock_domain domain, usock_socket_type 
 		info->protocol = SOCK_STREAM;
 		break;
 	}
+
+	info->sockopt = flags;
 }
 
 int usock_bind(usock_handle hsocket, unsigned port)
 {
 	struct SockInfo *node = (struct SockInfo*)hsocket;
+	int ret;
+	int val;
 
 	node->socket = socket(node->info.sin_family, node->protocol, 0);
 
@@ -326,13 +331,17 @@ int usock_bind(usock_handle hsocket, unsigned port)
 		return USOCK_ERROR_INIT_FAILED;
 	}
 
-	/* TODO: setsockopt */
+	/* Set socket options */
+	val = node->sockopt & USOCK_OPTIONS_REUSE_ADDRESS;
+	ret = setsockopt(node->socket, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+	val = node->sockopt & USOCK_OPTIONS_REUSE_PORT;
+	ret = setsockopt(node->socket, SOL_SOCKET, SO_REUSEPORT, &val, sizeof(val));
 
 	/* Bind the socket */
 	node->info.sin_addr.s_addr = INADDR_ANY;
 	node->info.sin_port = htons(port);
 
-	int ret = bind(node->socket, (struct sockaddr *)&node->info, sizeof(node->info));
+	ret = bind(node->socket, (struct sockaddr *)&node->info, sizeof(node->info));
 	return ret < 0 ? USOCK_ERROR_INIT_FAILED : USOCK_OK;
 }
 

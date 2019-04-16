@@ -44,6 +44,16 @@ typedef enum
 } usock_socket_type;
 
 /*
+* Optional bit flags for configuring the socket.
+*/
+typedef enum
+{
+	USOCK_OPTIONS_DEFAULT       = 0x0,
+	USOCK_OPTIONS_REUSE_ADDRESS = 0x1,
+	USOCK_OPTIONS_REUSE_PORT    = 0x2,
+} usock_options;
+
+/*
 * The network socket handle.
 * This is just an opaque pointer to an internal data structure.
 */
@@ -85,9 +95,10 @@ int usock_create_socket(
 * \param type - The connection type (see usock_socket_type for more info).
 */
 void usock_configure(
-	usock_handle hsock, 
-	usock_domain domain, 
-	usock_socket_type type
+	usock_handle      hsock, 
+	usock_domain      domain, 
+	usock_socket_type type,
+	unsigned          flags
 );
 
 /*
@@ -121,7 +132,7 @@ int usock_listen(
 * \return - Error code (see usock_err for more info)
 */
 int usock_accept(
-	usock_handle hsock, 
+	usock_handle  hsock, 
 	usock_handle *pOutSock
 );
 

@@ -3,6 +3,8 @@ INC = -Iinclude
 CFLAGS = $(INC) -Wall -Werror
 CXXFLAGS = $(INC) -Wall -Werror
 
+TC = g++
+
 csrc = $(wildcard src/*.c)
 ccsrc = $(wildcard src/*.cc)
 obj = $(csrc:.c=.o) $(ccsrc:.cc=.o)
@@ -11,7 +13,7 @@ builddir = build
 
 #build the test launcher tool
 usock-test: test/usock-test.o
-	clang++ -o $@ $^ $(CCFLAGS) -lpthread
+	$(TC) -o $@ $^ $(CCFLAGS) -lpthread
 
 #build the full usock library into an archive
 $(builddir)/usock.a: $(obj)
@@ -28,11 +30,11 @@ testobj = $(wildcard test/*.o)
 
 $(builddir)/TestClient: $(obj) test/TestClient.o
 	mkdir -p $(builddir)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(TC) -o $@ $^ $(CFLAGS)
 
 $(builddir)/TestServer: $(obj) test/TestServer.o
 	mkdir -p $(builddir)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(TC) -o $@ $^ $(CFLAGS)
 
 #clean up build artefacts
 .PHONY: clean

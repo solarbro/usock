@@ -28,11 +28,11 @@ $(builddir)/usock-lite.a: $(obj)
 #build the specified test
 testobj = $(wildcard test/*.o)
 
-$(builddir)/TestClient: $(obj) test/TestClient.o
+$(builddir)/TCPClient: $(obj) test/TCPClient.o
 	mkdir -p $(builddir)
 	$(TC) -o $@ $^ $(CFLAGS)
 
-$(builddir)/TestServer: $(obj) test/TestServer.o
+$(builddir)/TCPServer: $(obj) test/TCPServer.o
 	mkdir -p $(builddir)
 	$(TC) -o $@ $^ $(CFLAGS)
 

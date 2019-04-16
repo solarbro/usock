@@ -1,3 +1,25 @@
+/******************************************************************************
+Copyright (c) 2019 Sagnik Chowdhury
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*****************************************************************************/
+
 #include <stdio.h>
 #include <vector>
 #include <string>
@@ -11,8 +33,8 @@
 #define TCP_SERVER_CLIENT "tcp-server-client"
 
 //Target names
-#define TESTCLIENT "TestClient"
-#define TESTSERVER "TestServer"
+#define TCPCLIENT "TCPClient"
+#define TCPSERVER "TCPServer"
 
 struct Test
 {
@@ -37,7 +59,7 @@ int main(int argc, const char *argv[])
 	//Initialize target rules
 	static const std::unordered_map<std::string, Test> tests = {
 		{ TCP_SERVER_CLIENT, Test({
-			{ BUILDDIR "/" TESTSERVER, BUILDDIR "/" TESTCLIENT },
+			{ BUILDDIR "/" TCPSERVER, BUILDDIR "/" TCPCLIENT },
 			"Run the TCP server/client test."})
 		}
 	};

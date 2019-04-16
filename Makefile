@@ -11,7 +11,7 @@ obj = $(csrc:.c=.o) $(ccsrc:.cc=.o)
 
 builddir = build
 
-#build the test launcher tool
+#build the automated test tool
 usock-test: test/usock-test.o
 	$(TC) -o $@ $^ $(CCFLAGS) -lpthread
 
@@ -26,6 +26,8 @@ $(builddir)/usock-lite.a: $(obj)
 	ar r $@ src/usock.o
 
 #build the specified test
+#These commands don't need to be used manually.
+#They're only used by the automated test tool.
 testobj = $(wildcard test/*.o)
 
 $(builddir)/TCPClient: $(obj) test/TCPClient.o
@@ -33,6 +35,14 @@ $(builddir)/TCPClient: $(obj) test/TCPClient.o
 	$(TC) -o $@ $^ $(CFLAGS)
 
 $(builddir)/TCPServer: $(obj) test/TCPServer.o
+	mkdir -p $(builddir)
+	$(TC) -o $@ $^ $(CFLAGS)
+
+$(builddir)/UDPServer: $(obj) test/UDPServer.o
+	mkdir -p $(builddir)
+	$(TC) -o $@ $^ $(CFLAGS)
+
+$(builddir)/UDPClient: $(obj) test/UDPClient.o
 	mkdir -p $(builddir)
 	$(TC) -o $@ $^ $(CFLAGS)
 

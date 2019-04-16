@@ -31,10 +31,13 @@ SOFTWARE.
 
 //Test names
 #define TCP_SERVER_CLIENT "tcp-server-client"
+#define UDP_SERVER_CLIENT "udp-server-client"
 
 //Target names
 #define TCPCLIENT "TCPClient"
 #define TCPSERVER "TCPServer"
+#define UDPCLIENT "UDPClient"
+#define UDPSERVER "UDPServer"
 
 struct Test
 {
@@ -50,6 +53,7 @@ struct Test
 };
 
 Test::Result RunTest(const std::string &name, const Test &test);
+void PrintDivider();
 
 int main(int argc, const char *argv[])
 {
@@ -61,6 +65,10 @@ int main(int argc, const char *argv[])
 		{ TCP_SERVER_CLIENT, Test({
 			{ BUILDDIR "/" TCPSERVER, BUILDDIR "/" TCPCLIENT },
 			"Run the TCP server/client test."})
+		},
+		{ UDP_SERVER_CLIENT, Test({
+			{ BUILDDIR "/" UDPSERVER, BUILDDIR "/" UDPCLIENT },
+			"Run the UDP server/client test."}) 
 		}
 	};
 
@@ -69,11 +77,13 @@ int main(int argc, const char *argv[])
 		//Display usage
 		printf("Usage: usock-test arg\n");
 		printf("accepted args:\n");
-		printf("help - Display this help text\n");
-		printf("all - Run all tests.\n");
+		printf("%-20s | Description\n", "Arg");
+		printf("%.20s-------------------------\n", "------------------------------------------------------");
+		printf("%-20s | Display this help text\n", "help");
+		printf("%-20s | Run all tests.\n", "all");
 		for(const auto &test : tests)
 		{
-			printf("%s - %s\n", test.first.c_str(), test.second.description);
+			printf("%-20s | %s\n", test.first.c_str(), test.second.description);
 		}
 		printf("\n");
 		printf("Note: This tool will automatically build the targets required for the test.\n");
@@ -89,8 +99,11 @@ int main(int argc, const char *argv[])
 		for(const auto &test: tests)
 		{
 			++i;
+			printf("%4d. %s: \n", i, test.first.c_str());
+			PrintDivider();
 			int res = RunTest(test.first, test.second);
-			printf("%4d. %s: %s\n", i, test.first.c_str(), res == Test::PASS ? "PASSED" : "FAILED");
+			printf("\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
+			PrintDivider();
 			if(res != Test::PASS)
 			{
 				fail = true;
@@ -113,8 +126,11 @@ int main(int argc, const char *argv[])
 		}
 
 		//Run the test
+		printf("%4d. %s: \n", 1, argv[1]);
+		PrintDivider();
 		int res = RunTest(test->first, test->second);
-		printf("%4d. %s: %s\n", 1, argv[1], res == Test::PASS ? "PASSED" : "FAILED");
+		printf("\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
+		PrintDivider();
 		return res == Test::PASS ? 0 : 1;
 	}
 
@@ -196,4 +212,9 @@ void RunTestTargets(const Test &test, std::vector<int> &results)
 void CmdTest(const char *cmd, int *result)
 {
 	*result = system(cmd);
+}
+
+void PrintDivider()
+{
+	printf("--------------------------------\n");
 }

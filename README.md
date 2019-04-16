@@ -9,9 +9,7 @@ use ```make``` with one of the following arguments:
 | | Build the usock integration test tool. |
 | build/usock.a | Build an archive of the full usock library, including all utilities. | 
 | build/usock-lite.a | Build an archive of only the base usock library. | 
-| OPTIONAL |
-| build/TestClient | Build the client program. |
-| build/TestServer | Build the server program. |
+| clean | Cleanup build artefacts. |
 
 ## How to test
 The unit tests can be launched using the included integration test tool, once it's been built using ``` make ```.

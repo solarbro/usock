@@ -102,7 +102,7 @@ int main(int argc, const char *argv[])
 			printf("%4d. %s: \n", i, test.first.c_str());
 			PrintDivider();
 			int res = RunTest(test.first, test.second);
-			printf("\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
+			printf("\n\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
 			PrintDivider();
 			if(res != Test::PASS)
 			{
@@ -129,7 +129,7 @@ int main(int argc, const char *argv[])
 		printf("%4d. %s: \n", 1, argv[1]);
 		PrintDivider();
 		int res = RunTest(test->first, test->second);
-		printf("\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
+		printf("\n\t%s\n", res == Test::PASS ? "PASSED" : "FAILED");
 		PrintDivider();
 		return res == Test::PASS ? 0 : 1;
 	}

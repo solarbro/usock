@@ -356,6 +356,7 @@ int usock_bind(usock_handle hsocket, unsigned port)
 	/* Set socket options */
 	val = node->sockopt & USOCK_OPTIONS_REUSE_ADDRESS;
 	ret = setsockopt(node->socket, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+
 	val = node->sockopt & USOCK_OPTIONS_REUSE_PORT;
 	ret = setsockopt(node->socket, SOL_SOCKET, SO_REUSEPORT, &val, sizeof(val));
 
@@ -444,6 +445,39 @@ int usock_send(usock_handle hsock, const void *buffer, unsigned long long buflen
 {
 	struct SockInfo *node = (struct SockInfo *)hsock;
 	return send(node->socket, buffer, buflen, 0);
+}
+
+int usock_recv_from(usock_handle hsock, void *pBuffer, size_t len, unsigned flags, usock_handle *pOutClientInfo)
+{
+	socklen_t clilen = sizeof(struct sockaddr_in);
+	struct SockInfo *node = (struct SockInfo*)hsock;
+	struct SockInfo *cliinfoNode;
+
+	/* Allocate a node to hold the client info */
+	if(pOutClientInfo)
+	{
+		usock_create_socket("", pOutClientInfo);
+		cliinfoNode = (struct SockInfo*)(*pOutClientInfo);
+		return recvfrom(node->socket, pBuffer, len, (int)flags, (struct sockaddr *)&cliinfoNode->info, &clilen);
+	}
+
+	/* Receive the client message */
+	return recvfrom(node->socket, pBuffer, len, (int)flags, (struct sockaddr *)NULL, NULL);
+}
+
+int usock_send_to(usock_handle hsock, const void *pBuffer, size_t len, unsigned flags, usock_handle hdest)
+{
+	struct SockInfo *srcNode = (struct SockInfo *)hsock;
+	struct SockInfo *dstNode = (struct SockInfo *)hdest;
+
+	struct sockaddr *info = NULL;
+	size_t infolen = 0;
+	if(dstNode)
+	{
+		info = (struct sockaddr *)&dstNode->info;
+		infolen = sizeof(dstNode->info);
+	}
+	return sendto(srcNode->socket, pBuffer, len, (unsigned)flags, info, infolen);
 }
 
 void usock_close_socket(usock_handle hsock)

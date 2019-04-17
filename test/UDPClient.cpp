@@ -21,9 +21,58 @@ SOFTWARE.
 *****************************************************************************/
 
 #include <stdio.h>
+#include <string.h> 
+#include <string>
+#include <unistd.h> 
+#include <stdlib.h> 
+
+#include <usock.hpp>
+
+#define DEFAULT_BUFLEN 512
+#define PORT 8081
 
 int main(int argc, const char *argv[])
 {
-	printf("Hello, World!\n");
+	usock::Instance usockInst;
+
+	const char *ip_address = "127.0.0.1";
+
+	if(argc > 1)
+		ip_address = argv[1];
+
+    // create datagram socket 
+	usock_handle sockfd;
+	usock_create_socket("", &sockfd);
+	usock_configure(sockfd, USOCK_DOMAIN_IPV4, USOCK_SOCKTYPE_FAST, USOCK_OPTIONS_DEFAULT);
+
+    // connect to server 
+	int ret = usock_connect(sockfd, ip_address, PORT);
+	if(ret != USOCK_OK)
+	{
+		printf("Connect failed\n");
+		return 1;
+	}
+  
+    // request to send datagram 
+    // no need to specify server address in sendto 
+    // connect stores the peers IP and port 
+    std::string message = "Hello Server"; 
+	usock_send_to(sockfd, message.c_str(), message.length(), 0, NULL);
+      
+    // waiting for response 
+	char buffer[100]; 
+	int n = usock_recv_from(sockfd, buffer, sizeof(buffer), 0, NULL);
+
+	//Ensure string is correctly reversed
+	if((size_t)n != message.length())
+		return 2;
+
+	for(size_t i = 0; i < message.length(); ++i)
+	{
+		if(buffer[i] != message[message.length() - i - 1])
+			return 2;
+	}
+  
+	///////////////////////////
 	return 0;
 }

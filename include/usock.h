@@ -21,6 +21,7 @@ SOFTWARE.
 *****************************************************************************/
 
 #pragma once
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -195,6 +196,28 @@ int usock_send(
 	usock_handle        hsock, 
 	const void         *pBuffer, 
 	unsigned long long  buflen
+);
+
+/*
+*
+*/
+int usock_recv_from(
+	usock_handle hsock, 
+	void *pBuffer,
+	size_t len,
+	unsigned flags,
+	usock_handle *pOutClientInfo
+);
+
+/*
+*
+*/
+int usock_send_to(
+	usock_handle hsock,
+	const void *pBuffer,
+	size_t len,
+	unsigned flags,
+	usock_handle hdest
 );
 
 /*

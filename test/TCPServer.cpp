@@ -33,16 +33,9 @@ void reverseStr(char *str);
 
 int main(int argc, const char *argv[])
 {
-	int iResult;
-
-	usock_handle ListenSocket = nullptr;
-	usock_handle ClientSocket = nullptr;
-
-	int valread;
-	char buffer[DEFAULT_BUFLEN];
-
 	usock::Instance usockInst;
 
+	usock_handle ListenSocket = nullptr;
 	usock_create_socket("Listen socket", &ListenSocket);
 	usock_configure(
 		ListenSocket, 
@@ -51,7 +44,7 @@ int main(int argc, const char *argv[])
 		USOCK_OPTIONS_REUSE_ADDRESS);
 
 	// Create a SOCKET for connecting to server
-	iResult = usock_bind(ListenSocket, PORT);
+	int iResult = usock_bind(ListenSocket, PORT);
 	if(iResult != USOCK_OK)
 	{
 		printf("Failed to bind socket.\n");
@@ -65,6 +58,7 @@ int main(int argc, const char *argv[])
 		return iResult;
 	}
 
+	usock_handle ClientSocket = nullptr;
 	iResult = usock_accept(ListenSocket, &ClientSocket);
 	if(iResult != USOCK_OK)
 	{
@@ -72,8 +66,8 @@ int main(int argc, const char *argv[])
 		return iResult;
 	}
 
-	memset(buffer, 0, sizeof(buffer));
-	valread = usock_read(ClientSocket, buffer, DEFAULT_BUFLEN);
+	char buffer[DEFAULT_BUFLEN] = {};
+	int valread = usock_read(ClientSocket, buffer, DEFAULT_BUFLEN);
 
 	if(valread > 0)
 	{

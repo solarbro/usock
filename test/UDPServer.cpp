@@ -20,10 +20,54 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *****************************************************************************/
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <string>
+#include <usock.hpp>
+
+#define DEFAULT_BUFLEN 512
+#define PORT 8081
 
 int main(int argc, const char *argv[])
 {
-	printf("Hello, World!\n");
+	usock::Instance usockInst;
+
+    // Create a UDP Socket 
+	usock_handle listenfd;
+	usock_create_socket("listen socket", &listenfd);
+	usock_configure(
+		listenfd, 
+		USOCK_DOMAIN_IPV4, 
+		USOCK_SOCKTYPE_FAST, 
+		USOCK_OPTIONS_DEFAULT
+	);
+
+    // bind server address to socket descriptor 
+	int ret = usock_bind(listenfd, PORT);
+	if(ret != USOCK_OK)
+	{
+		printf("Bind failed\n");
+		return 1;
+	}
+   
+    //receive the datagram 
+	usock_handle client;
+	char buffer[100]; 
+	int n = usock_recv_from(listenfd, buffer, sizeof(buffer), 0, &client);
+
+    buffer[n] = '\0'; 
+
+	//Reverse string
+	std::string message;
+	message.reserve(n);
+	for(int i = 0; i < n; ++i)
+	{
+		message.push_back(buffer[n - i - 1]);
+	}
+           
+    // send the response 
+	usock_send_to(listenfd, message.c_str(), message.length(), 0, client);
+
 	return 0;
 }

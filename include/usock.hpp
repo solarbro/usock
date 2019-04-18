@@ -24,6 +24,7 @@ SOFTWARE.
 #include <usock_types.hpp>
 #include <usock_isock.hpp>
 #include <usock_buffer.hpp>
+#include <atomic>
 
 namespace usock
 {
@@ -69,7 +70,7 @@ namespace usock
 		}
 
 		// Constructor that accepts a pre-allocated handle.
-		explicit unique_sock(usock_handle_t hsock)
+		explicit unique_sock(handle_t hsock)
 		{
 			reset(hsock);
 		}
@@ -94,14 +95,14 @@ namespace usock
 		unique_sock(const unique_sock &handle) = delete;
 		void operator=(const unique_sock &handle) = delete;
 
-		usock_handle_t release()
+		handle_t release()
 		{
-			usock_handle_t tmp = m_handle;
+			handle_t tmp = m_handle;
 			m_handle = nullptr;
 			return tmp;
 		}
 
-		void reset(usock_handle_t hsock)
+		void reset(handle_t hsock)
 		{
 			if(m_handle)
 			{
@@ -122,13 +123,78 @@ namespace usock
 	class shared_sock : public isock
 	{
 	public:
-		shared_sock();
-		~shared_sock();
+		shared_sock()
+		{
+			// Allocate socket node with extra memory for the reference counter.
+			usock_create_socket_ex("", sizeof(refcount_t), &m_handle, (void**)&m_refCounter);
+			// Call the constructor to initialize to 1.
+			new (m_refCounter) refcount_t(1);
+		}
 
-		shared_sock(const shared_sock &rhs);
-		const shared_sock &operator=(const shared_sock &rhs);
+		shared_sock(const char *name)
+		{
+			// Allocate socket node with extra memory for the reference counter.
+			usock_create_socket_ex(name, sizeof(refcount_t), &m_handle, (void**)&m_refCounter);
+			// Call the constructor to initialize to 1.
+			new (m_refCounter) refcount_t(1);
+		}
 
-		explicit shared_sock(handle_t hsock);
+		~shared_sock()
+		{
+			release();
+		}
 
+		shared_sock(const shared_sock &rhs)
+		{
+			release();
+			m_handle = rhs.m_handle;
+			m_refCounter = rhs.m_refCounter;
+			++(*m_refCounter);
+		}
+
+		const shared_sock &operator=(const shared_sock &rhs)
+		{
+			release();
+			m_handle = rhs.m_handle;
+			m_refCounter = rhs.m_refCounter;
+			++(*m_refCounter);
+		}
+
+		void swap(shared_sock &rhs)
+		{
+			std::swap(m_handle    , rhs.m_handle    );
+			std::swap(m_refCounter, rhs.m_refCounter);
+		}
+
+		int64_t use_count() const
+		{
+			if(!m_refCounter)
+				return 0;
+			return (*m_refCounter);
+		}
+
+		bool is_unique() const
+		{
+			return use_count() == 1;
+		}
+
+	private:
+		using refcount_t = std::atomic_int64_t;
+		refcount_t *m_refCounter;
+
+		void release()
+		{
+			if(m_refCounter)
+			{
+				--(*m_refCounter);
+				if(*m_refCounter <= 0)
+				{
+					usock_close_socket(m_handle);
+					usock_free_socket(m_handle);
+					m_handle = nullptr;
+				}
+				m_refCounter = nullptr;
+			}
+		}
 	};
 }

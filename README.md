@@ -7,8 +7,8 @@ use ```make``` with one of the following arguments:
 | Argument | Description |
 |----------|-------------|
 | | Build the usock integration test tool. |
-| build/usock.a | Build an archive of the full usock library, including all utilities. | 
-| build/usock-lite.a | Build an archive of only the base usock library. | 
+| usock.a | Build an archive of the full usock library, including all utilities. | 
+| usock-lite.a | Build an archive of only the base usock library. | 
 | clean | Cleanup build artefacts. |
 
 ## How to test

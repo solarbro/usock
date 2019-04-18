@@ -16,13 +16,11 @@ usock-test: test/usock-test.o
 	$(TC) -o $@ $^ $(CCFLAGS) -lpthread
 
 #build the full usock library into an archive
-$(builddir)/usock.a: $(obj)
-	mkdir -p $(builddir)
+usock.a: $(obj)
 	ar r $@ $^ 
 
 #build only the base usock library with none of the utils
-$(builddir)/usock-lite.a: $(obj)
-	mkdir -p $(builddir)
+usock-lite.a: $(obj)
 	ar r $@ src/usock.o
 
 #build the specified test
@@ -52,3 +50,5 @@ clean:
 	rm -f $(obj) $(testobj)
 	rm -f -r $(builddir)
 	rm -f usock-test
+	rm -f usock.a
+	rm -f usock-lite.a

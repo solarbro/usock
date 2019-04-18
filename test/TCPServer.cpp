@@ -33,9 +33,9 @@ void reverseStr(char *str);
 
 int main(int argc, const char *argv[])
 {
-	usock::Instance usockInst;
+	usock::instance usockInst;
 
-	usock_handle ListenSocket = nullptr;
+	usock_handle_t ListenSocket = nullptr;
 	usock_create_socket("Listen socket", &ListenSocket);
 	usock_configure(
 		ListenSocket, 
@@ -58,7 +58,7 @@ int main(int argc, const char *argv[])
 		return iResult;
 	}
 
-	usock_handle ClientSocket = nullptr;
+	usock_handle_t ClientSocket = nullptr;
 	iResult = usock_accept(ListenSocket, &ClientSocket);
 	if(iResult != USOCK_OK)
 	{

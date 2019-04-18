@@ -37,9 +37,9 @@ int main(int argc, char const *argv[])
 		ip = argv[1];
 	}
 
-	usock::Instance usockInst;
+	usock::instance usockInst;
 
-    usock_handle sock = 0; 
+    usock_handle_t sock = 0; 
 	usock_create_socket("Client socket", &sock);
 	usock_configure(
 		sock, 

@@ -33,7 +33,7 @@ SOFTWARE.
 
 int main(int argc, const char *argv[])
 {
-	usock::Instance usockInst;
+	usock::instance usockInst;
 
 	const char *ip_address = "127.0.0.1";
 
@@ -41,7 +41,7 @@ int main(int argc, const char *argv[])
 		ip_address = argv[1];
 
     // create datagram socket 
-	usock_handle sockfd;
+	usock_handle_t sockfd;
 	usock_create_socket("", &sockfd);
 	usock_configure(sockfd, USOCK_DOMAIN_IPV4, USOCK_SOCKTYPE_FAST, USOCK_OPTIONS_DEFAULT);
 

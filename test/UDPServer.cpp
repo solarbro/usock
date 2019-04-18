@@ -31,10 +31,10 @@ SOFTWARE.
 
 int main(int argc, const char *argv[])
 {
-	usock::Instance usockInst;
+	usock::instance usockInst;
 
     // Create a UDP Socket 
-	usock_handle listenfd;
+	usock_handle_t listenfd;
 	usock_create_socket("listen socket", &listenfd);
 	usock_configure(
 		listenfd, 
@@ -52,7 +52,7 @@ int main(int argc, const char *argv[])
 	}
    
     //receive the datagram 
-	usock_handle client;
+	usock_handle_t client;
 	char buffer[100]; 
 	int n = usock_recv_from(listenfd, buffer, sizeof(buffer), 0, &client);
 

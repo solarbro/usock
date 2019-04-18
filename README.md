@@ -8,7 +8,7 @@ use ```make``` with one of the following arguments:
 |----------|-------------|
 | | Build the usock integration test tool. |
 | usock.a | Build an archive of the full usock library, including all utilities. | 
-| usock-lite.a | Build an archive of only the base usock library. | 
+| usock-lite.a | Build an archive of only the core usock library. | 
 | clean | Cleanup build artefacts. |
 
 ## How to test
@@ -23,3 +23,4 @@ To use the tool, ```cd``` to the root directory of the repository and run "```./
 | help | Display the help text. |
 | all | Run all the tests. |
 | tcp-server-client | Test the TCP server/client unit test. |
+| udp-server-client | Test the UDP server/client unit test. |

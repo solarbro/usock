@@ -25,6 +25,7 @@ SOFTWARE.
 #include <usock_isock.hpp>
 #include <usock_buffer.hpp>
 #include <atomic>
+#include <new>
 
 namespace usock
 {
@@ -158,6 +159,7 @@ namespace usock
 			m_handle = rhs.m_handle;
 			m_refCounter = rhs.m_refCounter;
 			++(*m_refCounter);
+			return *this;
 		}
 
 		void swap(shared_sock &rhs)

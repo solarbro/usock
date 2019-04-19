@@ -114,6 +114,10 @@ namespace usock
 			m_handle = hsock;
 		}
 
+		void swap(unique_sock &rhs)
+		{
+			std::swap(m_handle, rhs.m_handle);
+		}
 	};
 
 	/*

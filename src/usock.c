@@ -52,6 +52,16 @@ usock_pfree_t  g_pfree       = NULL;
 /* Check if the library is initialized */
 int            g_initialized = 0;
 
+usock_err_t usock_set_custom_allocator(const usock_allocator *allocator)
+{
+	if(g_initialized)
+		return USOCK_ERROR_ALREADY_INITIALIZED;
+
+	g_palloc = allocator->pMalloc;
+	g_pfree  = allocator->pFree;
+	return USOCK_OK;
+}
+
 usock_err_t initCommon()
 {
 	if(!g_palloc)

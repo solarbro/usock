@@ -1,5 +1,13 @@
 # usock
-Platform agnostic networking API
+Platform agnostic C/C++ socket API.
+
+Currently supported platforms:
+
+| Platform | Status |
+|----------|--------|
+| Linux    | Supported |
+| Winows   | Supported |
+| Mac OS   | Work in progress |
 
 ## How to build
 use ```make``` with one of the following arguments:

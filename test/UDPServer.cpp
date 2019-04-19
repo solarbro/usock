@@ -53,15 +53,15 @@ int main(int argc, const char *argv[])
    
     //receive the datagram 
 	usock_handle_t client;
-	char buffer[100]; 
-	int n = usock_recv_from(listenfd, buffer, sizeof(buffer), 0, &client);
+	char buffer[100] = {0}; 
+	usock_ssize_t n = usock_recv_from(listenfd, buffer, sizeof(buffer), 0, &client);
 
     buffer[n] = '\0'; 
 
 	//Reverse string
 	std::string message;
 	message.reserve(n);
-	for(int i = 0; i < n; ++i)
+	for(usock_ssize_t i = 0; i < n; ++i)
 	{
 		message.push_back(buffer[n - i - 1]);
 	}

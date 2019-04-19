@@ -161,7 +161,7 @@ namespace usock
 		template <typename T>
 		proxy_buffer<T> cast() const
 		{
-			return proxy<T>(reinterpret_cast<const T*>(m_data));
+			return proxy_buffer<T>(reinterpret_cast<const T*>(m_data));
 		}
 
 		/*

@@ -77,7 +77,11 @@ void initSockInfo(struct SockInfoNode *node, size_t bytes, const char *name)
 {
 	memset(node, 0, bytes);
 	node->blockSize = bytes;
+#ifdef _WIN32
+	strncpy_s(node->name, MAX_SOCKET_NAME_LEN, name, MAX_SOCKET_NAME_LEN);
+#else
 	strncpy(node->name, name, MAX_SOCKET_NAME_LEN);
+#endif
 
 	if(!g_tail)
 	{
@@ -116,175 +120,231 @@ void freeNodeList()
 
 #pragma comment (lib, "Ws2_32.lib")
 
-usock_err translate_win32_error(int error)
+typedef struct SockInfo
 {
-	switch (error)
-	{
-	case WSANOTINITIALISED:
-		return USOCK_ERROR_NOT_INITIALIZED;
-	case WSAENETDOWN:
-		return USOCK_ERROR_NETWORK_DOWN;
-	case WSAEINVAL:
-		return USOCK_ERROR_INVALID_ARG;
-	case WSAEPROTONOSUPPORT:
-		return USOCK_ERROR_PROTOCOL_NOT_SUPPORTED;
-	default:
-		return USOCK_ERROR_INTERNAL;
-	}
-}
+	SOCKET sockfd;
+	struct addrinfo info;
+	unsigned sockopt;
+}SockInfo;
+
+const size_t kSockNodeSize = sizeof(SockInfoNode) + sizeof(SockInfo);
 
 int usock_initialize()
 {
 	WSADATA wsaData;
 	int iResult;
 
+	if(g_initialized)
+		return USOCK_ERROR_ALREADY_INITIALIZED;
+
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0) 
 		return USOCK_ERROR_INIT_FAILED;
+
+	initCommon();
 
 	return USOCK_OK;
 }
 
 void usock_release()
 {
+	freeNodeList();
 	WSACleanup();
 }
 
-int usock_open_socket(usock_socket * outSocket, usock_domain domain, usock_socket_type type)
+int translateDomain(usock_domain_t domain)
 {
-	int family;
-	switch(domain)
-	{
-	case USOCK_DOMAIN_IPV4:
-		family = AF_INET;
-		break;
-	case USOCK_DOMAIN_IPV6:
-		family = AF_INET6;
-		break;
-	default:
-		family = AF_UNSPEC;
-		break;
+	const int winsockDomains[] = {
+		AF_UNSPEC,
+		AF_INET,
+		AF_INET6
+	};
+	return winsockDomains[domain];
+}
+
+void translateProtocol(usock_socket_type_t type, int *outType, int *outProtocol)
+{
+	const int winsockProtocol[] = {
+		IPPROTO_UDP,
+		IPPROTO_TCP
+	};
+
+	const int winsockType[] = {
+		SOCK_DGRAM,
+		SOCK_STREAM
+	};
+
+	*outType = winsockType[type];
+	*outProtocol = winsockProtocol[type];
+}
+
+void usock_configure(usock_handle_t hsock, usock_domain_t domain, usock_socket_type_t type, usock_flags_t flags)
+{
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	ZeroMemory(&node->info, sizeof(node->info));
+	node->info.ai_family = translateDomain(domain);
+	translateProtocol(type, &node->info.ai_socktype, &node->info.ai_protocol);
+	node->sockopt = flags;
+}
+
+usock_err_t usock_bind(usock_handle_t hsock, usock_port_t port)
+{
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	struct addrinfo *result = NULL;
+	#define PORT_STR_SIZE 8
+	char portStr[PORT_STR_SIZE];
+	int val, ret;
+
+	// Resolve the server address and port
+	node->info.ai_flags = AI_PASSIVE;
+	val = sprintf_s(portStr, PORT_STR_SIZE, "%hu", port);
+	portStr[val] = '\0';
+	ret = getaddrinfo((PCSTR)NULL, portStr, &node->info, &result);
+	if (ret != 0) {
+		return USOCK_ERROR_INTERNAL;
 	}
 
-	int stype;
-	int protocol;
-	switch (type)
+	node->sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (node->sockfd == INVALID_SOCKET)
 	{
-	case USOCK_SOCKTYPE_FAST:
-		stype = SOCK_DGRAM;
-		protocol = IPPROTO_UDP;
-		break;
-	case USOCK_SOCKTYPE_RELIABLE:
-		stype = SOCK_STREAM;
-		protocol = IPPROTO_TCP;
-		break;
-	default:
-		stype = 0;    //Not sure this is a good idea!!
-		protocol = 0;
-		break;
+		freeaddrinfo(result);
+		return USOCK_ERROR_INIT_FAILED;
 	}
 
-	outSocket->hsock.winsock = socket(family, stype, protocol);
-	if(outSocket->hsock.winsock == INVALID_SOCKET)
-	{
-		int err = WSAGetLastError();
-		return translate_win32_error(err);
-	}
+	/* Set socket options */
+	val = node->sockopt & USOCK_OPTIONS_REUSE_ADDRESS;
+	setsockopt(node->sockfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&val, sizeof(val));
+	/* SO_REUSEPORT doesn't seem to exist for windows */
 
-	// Copy reserved values
-	memcpy(outSocket->reserved, &family, sizeof(unsigned));
-	memcpy(outSocket->reserved + 1, &protocol, sizeof(unsigned));
+	/* Bind the socket */
+	ret = bind(node->sockfd, result->ai_addr, (int)result->ai_addrlen);
+	freeaddrinfo(result);
+
+	return ret == SOCKET_ERROR ? USOCK_ERROR_INIT_FAILED : USOCK_OK;
+}
+
+usock_err_t usock_listen(usock_handle_t hsock, int backlog)
+{
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	int ret;
+
+	if(node->sockfd == INVALID_SOCKET)
+		return USOCK_ERROR_NOT_INITIALIZED;
+
+	ret = listen(node->sockfd, backlog);
+	if(ret == SOCKET_ERROR)
+		return USOCK_ERROR_INTERNAL;
+
 	return USOCK_OK;
 }
 
-int usock_get_addr_info(const char * node, const char * service, const usock_addr_info * pHints, usock_addr_info ** ppOutResults)
+usock_err_t usock_accept(usock_handle_t hsock, usock_handle_t *pOutSock)
 {
-	struct addrinfo hints, *result = NULL;
-	int error;
-	switch(pHints->protocol)
+	SOCKET newSock;
+	unsigned char address[sizeof(struct sockaddr_in6)];
+	socklen_t len  = sizeof(address); /* We just use the biggest one for size. */
+
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	struct SockInfo *outNode;
+
+	newSock = accept(node->sockfd, (struct sockaddr *)address, &len);
+	if(newSock == INVALID_SOCKET)
 	{
-	case USOCK_SOCKTYPE_FAST:
-		hints.ai_socktype = SOCK_DGRAM;
-		hints.ai_protocol = IPPROTO_UDP;
-		break;
-	case USOCK_SOCKTYPE_RELIABLE:
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-		break;
-	default:
-		hints.ai_socktype = 0;
-		hints.ai_protocol = 0;
-		break;
-	}
-	switch(pHints->family)
-	{
-	case USOCK_DOMAIN_IPV4:
-		hints.ai_family = AF_INET;
-		break;
-	case USOCK_DOMAIN_IPV6:
-		hints.ai_family = AF_INET6;
-		break;
-	default:
-		hints.ai_family = AF_UNSPEC;
-		break;
+		*pOutSock = NULL;
+		return USOCK_ERROR_INTERNAL;
 	}
 
-	error = getaddrinfo(node, service, &hints, &result);
-	if(error != 0)
+	usock_create_socket("client socket", pOutSock);
+	outNode = GET_SOCK_INFO_FROM_HANDLE(SockInfo, (*pOutSock));
+
+	/* Cache the returned socket info */
+	outNode->sockfd = newSock;
+	memcpy(&outNode->info, address, len);
+
+	return USOCK_OK;
+}
+
+usock_err_t usock_connect(usock_handle_t hsock, const char *ip_address, usock_port_t port)
+{
+	int ret, val;
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	char portStr[PORT_STR_SIZE];
+	struct addrinfo *result;
+
+	/* Resolve address info */
+	val = sprintf_s(portStr, PORT_STR_SIZE, "%hu", port);
+	portStr[val] = '\0';
+	ret = getaddrinfo(ip_address, portStr, &node->info, &result);
+	if (ret != 0) 
 	{
-		*ppOutResults = NULL;
-		return translate_win32_error(error);
+		return USOCK_ERROR_INTERNAL;
 	}
 
-	*ppOutResults = (usock_addr_info*)malloc(sizeof(usock_addr_info));
+	/* open socket */
+	node->sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if(node->sockfd == INVALID_SOCKET)
+	{
+		return USOCK_ERROR_INIT_FAILED;
+	}
 
-	return 0;
+	ret = connect(node->sockfd, result->ai_addr, (int)result->ai_addrlen);
+
+	freeaddrinfo(result);
+
+	if(ret == SOCKET_ERROR)
+		return USOCK_ERROR_INTERNAL;
+	return USOCK_OK;
 }
 
-int usock_bind(const usock_socket *socket, unsigned port)
+usock_ssize_t usock_recv(usock_handle_t hsock, void *pOutBuffer, usock_size_t buflen)
 {
-	struct sockaddr_in address;
-	int err;
-	address.sin_family = (ADDRESS_FAMILY) socket->reserved[0];
-	address.sin_port = htons(port);
-	address.sin_addr.S_un.S_addr = INADDR_ANY;
-
-	err = bind(socket->hsock.winsock, (struct sockaddr*)&address, sizeof(address));
-	return translate_win32_error(err);
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	return (usock_ssize_t)recv(node->sockfd, (char*)pOutBuffer, (int)buflen, 0);
 }
 
-int usock_listen(const usock_socket *socket, int backlog)
+usock_ssize_t usock_send(usock_handle_t hsock, const void *buffer, usock_size_t buflen)
 {
-	int err;
-	err = listen(socket->hsock.winsock, backlog);
-	return translate_win32_error(err);
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	return (usock_ssize_t)send(node->sockfd, (const char*)buffer, (int)buflen, 0);
 }
 
-int usock_accept(const usock_socket *socket, usock_address * addr, unsigned * addr_len)
+usock_ssize_t usock_recv_from(usock_handle_t hsock, void * pBuffer, usock_size_t len, usock_flags_t flags, usock_handle_t * pOutClientInfo)
 {
-	int err;
-	int nameLen;
-	err = accept(socket->hsock.winsock, (struct sockaddr*)addr, &nameLen);
-	*addr_len = (unsigned)nameLen;
-	return translate_win32_error(err);
+	socklen_t clilen = sizeof(struct sockaddr_in);
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	struct SockInfo *cliinfoNode;
+
+	/* Allocate a node to hold the client info */
+	if(pOutClientInfo)
+	{
+		usock_create_socket("", pOutClientInfo);
+		cliinfoNode = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, (*pOutClientInfo));
+		return (usock_ssize_t)recvfrom(node->sockfd, pBuffer, (int)len, (int)flags, (struct sockaddr *)&cliinfoNode->info, &clilen);
+	}
+
+	/* Receive the client message */
+	return (usock_ssize_t)recvfrom(node->sockfd, pBuffer, (int)len, (int)flags, (struct sockaddr *)NULL, NULL);
 }
 
-int usock_connect(const usock_socket *socket, const char *ip_address, unsigned port)
+usock_ssize_t usock_send_to(usock_handle_t hsock, const void *pBuffer, usock_size_t len, usock_flags_t flags, usock_handle_t hdest)
 {
-	int err;
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	inet_pton(addr.sin_family, ip_address, &addr.sin_addr);
-	err = connect(socket->hsock.winsock, &addr, sizeof(addr));
-	return translate_win32_error(err);
+	struct SockInfo *srcNode = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	struct SockInfo *dstNode;
+	struct sockaddr *info = NULL;
+	int infolen = 0;
+	if(hdest)
+	{
+		dstNode = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hdest);
+		info = (struct sockaddr *)&dstNode->info;
+		infolen = sizeof(struct sockaddr_in);
+	}
+	return (usock_ssize_t)sendto(srcNode->sockfd, pBuffer, (int)len, (unsigned)flags, info, infolen);
 }
 
-int usock_close_socket(usock_socket *socket)
+void usock_close_socket(usock_handle_t hsock)
 {
-	int err;
-	err = closesocket(socket->hsock.winsock);
-	return translate_win32_error(err);
+	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
+	closesocket(node->sockfd);
 }
 
 #elif __APPLE__

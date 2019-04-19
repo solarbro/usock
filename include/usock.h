@@ -52,7 +52,7 @@ typedef enum
 */
 typedef enum
 {
-	USOCK_UNSPECIFIED = 0,
+	USOCK_DOMAIN_UNSPECIFIED = 0,
 	USOCK_DOMAIN_IPV4,
 	USOCK_DOMAIN_IPV6,
 } usock_domain_t;
@@ -206,7 +206,7 @@ usock_err_t usock_bind(
 * \return - Error code (see usock_err_t for more info)
 */
 usock_err_t usock_listen(
-	usock_handle_t      socket, 
+	usock_handle_t      hsock, 
 	int                 backlog
 );
 
@@ -242,7 +242,7 @@ usock_err_t usock_connect(
 * \param buflen - The size of the provided buffer.
 * \return - Number of bytes read.
 */
-usock_ssize_t usock_read(
+usock_ssize_t usock_recv(
 	usock_handle_t      hsock, 
 	void               *pOutBuffer, 
 	usock_size_t        buflen
@@ -292,7 +292,7 @@ usock_ssize_t usock_send_to(
 	usock_handle_t     hsock,
 	const void        *pBuffer,
 	usock_size_t       len,
-	unsigned           flags,
+	usock_flags_t      flags,
 	usock_handle_t     hdest
 );
 

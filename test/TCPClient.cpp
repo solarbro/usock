@@ -57,7 +57,7 @@ int main(int argc, char const *argv[])
 
 	// Send
     const char *hello = "Hello, Server!"; 
-    iResult = usock_send(sock , hello , strlen(hello)); 
+    iResult = (int)usock_send(sock , hello , strlen(hello)); 
 	if(iResult < 0)
 	{
 		printf("Send failed\n");
@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
 
 	// Read
     char buffer[DEFAULT_BUFLEN] = {0}; 
-    int valread = usock_read( sock , buffer, DEFAULT_BUFLEN); 
+    usock_ssize_t valread = usock_recv( sock , buffer, DEFAULT_BUFLEN); 
 	if(valread > 0)
 	{
 		usock_release();

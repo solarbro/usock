@@ -23,7 +23,6 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h> 
 #include <string>
-#include <unistd.h> 
 #include <stdlib.h> 
 
 #include <usock.hpp>
@@ -60,8 +59,8 @@ int main(int argc, const char *argv[])
 	usock_send_to(sockfd, message.c_str(), message.length(), 0, NULL);
       
     // waiting for response 
-	char buffer[100]; 
-	int n = usock_recv_from(sockfd, buffer, sizeof(buffer), 0, NULL);
+	char buffer[100] = {0}; 
+	usock_ssize_t n = usock_recv_from(sockfd, buffer, sizeof(buffer), 0, NULL);
 
 	//Ensure string is correctly reversed
 	if((size_t)n != message.length())

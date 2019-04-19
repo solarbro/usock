@@ -67,7 +67,7 @@ int main(int argc, const char *argv[])
 	}
 
 	char buffer[DEFAULT_BUFLEN] = {};
-	int valread = usock_read(ClientSocket, buffer, DEFAULT_BUFLEN);
+	usock_ssize_t valread = usock_recv(ClientSocket, buffer, DEFAULT_BUFLEN);
 
 	if(valread > 0)
 	{

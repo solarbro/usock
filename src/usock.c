@@ -521,7 +521,7 @@ usock_err_t usock_connect( usock_handle_t hsock, const char *ip_address, unsigne
 	return USOCK_OK;
 }
 
-usock_ssize_t usock_read(usock_handle_t hsock, void *pOutBuffer, usock_size_t buflen)
+usock_ssize_t usock_recv(usock_handle_t hsock, void *pOutBuffer, usock_size_t buflen)
 {
 	struct SockInfo *node = GET_SOCK_INFO_FROM_HANDLE(struct SockInfo, hsock);
 	return read(node->socketfd, pOutBuffer, buflen);

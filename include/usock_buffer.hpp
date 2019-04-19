@@ -10,7 +10,6 @@ namespace usock
 		proxy_buffer() : m_start(nullptr), m_end(nullptr) {}
 		proxy_buffer(const T *start, const T *end) : m_start(data), m_end(end) {}
 
-		template<typename T>
 		const T *data() const
 		{
 			return m_start;

@@ -24,6 +24,21 @@ SOFTWARE.
 
 #include <stddef.h>
 
+/* Define USOCK_DLL_INTERFACE to compile as a shared library. */
+#ifdef USOCK_DLL_INTERFACE
+/* When importing to the shared library, define USOCK_DLL_IMPORT */
+#ifdef USOCK_DLL_IMPORT
+#define USOCK_INTERFACE  __declspec(dllimport)
+#define USOCK_CONVENTION __cdecl
+#else
+#define USOCK_INTERFACE  __declspec(dllexport)
+#define USOCK_CONVENTION __cdecl
+#endif
+#else
+#define USOCK_INTERFACE 
+#define USOCK_CONVENTION
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -126,14 +141,16 @@ typedef struct
 * This can only be used before usock_initialize() as overriding
 * the allocator mid-run would cause memory leaks.
 */
-usock_err_t usock_set_custom_allocator(const usock_allocator *pAllocator);
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_set_custom_allocator(
+	const usock_allocator *pAllocator
+);
 
 /*
 * Initialize the usock library.
 * This must be called before any other usock function.
 * \return - Error code (see usock_err for more info)
 */
-usock_err_t usock_initialize();
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_initialize();
 
 /*
 * Release the usock library.
@@ -143,7 +160,7 @@ usock_err_t usock_initialize();
 * currently in use, so there's no need to explicitly cleanup any
 * of the sockets while exiting.
 */
-void usock_release();
+USOCK_INTERFACE void USOCK_CONVENTION usock_release();
 
 /*
 * Create a socket.
@@ -152,7 +169,7 @@ void usock_release();
 * \param pOutSocket - The returned socket handle.
 * \return - Error code (see usock_err_t for more info)
 */
-usock_err_t usock_create_socket(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_create_socket(
 	const char         *name,
 	usock_handle_t     *pOutSocket
 );
@@ -167,7 +184,7 @@ usock_err_t usock_create_socket(
 * \param ppOutUserData - A pointer to the allocated user data.
 * \return - Error code (see usock_err_t for more info).
 */
-usock_err_t usock_create_socket_ex(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_create_socket_ex(
 	const char        *name,
 	usock_size_t       userBytes,
 	usock_handle_t    *pOutSocket,
@@ -180,7 +197,7 @@ usock_err_t usock_create_socket_ex(
 * \param domain - The connection domain (see usock_domain for more info).
 * \param type - The connection type (see usock_socket_type for more info).
 */
-void usock_configure(
+USOCK_INTERFACE void USOCK_CONVENTION usock_configure(
 	usock_handle_t      hsock, 
 	usock_domain_t      domain, 
 	usock_socket_type_t type,
@@ -193,7 +210,7 @@ void usock_configure(
 * \param port - The port number to bind the socket to.
 * \return - Error code (see usock_err_t for more info)
 */
-usock_err_t usock_bind(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_bind(
 	usock_handle_t      hsock, 
 	usock_port_t        port
 );
@@ -205,7 +222,7 @@ usock_err_t usock_bind(
 *                  connections for this socket can grow to.
 * \return - Error code (see usock_err_t for more info)
 */
-usock_err_t usock_listen(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_listen(
 	usock_handle_t      hsock, 
 	int                 backlog
 );
@@ -217,7 +234,7 @@ usock_err_t usock_listen(
 * \param pOutSock - The returned socket handle.
 * \return - Error code (see usock_err_t for more info)
 */
-usock_err_t usock_accept(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_accept(
 	usock_handle_t      hsock, 
 	usock_handle_t     *pOutSock
 );
@@ -229,7 +246,7 @@ usock_err_t usock_accept(
 * \param port - The port to connect to.
 * \return - Error code (see usock_err_t for more info)
 */
-usock_err_t usock_connect(
+USOCK_INTERFACE usock_err_t USOCK_CONVENTION usock_connect(
 	usock_handle_t      hsock,
 	const char         *ip_address,
 	usock_port_t        port
@@ -242,7 +259,7 @@ usock_err_t usock_connect(
 * \param buflen - The size of the provided buffer.
 * \return - Number of bytes read.
 */
-usock_ssize_t usock_recv(
+USOCK_INTERFACE usock_ssize_t USOCK_CONVENTION usock_recv(
 	usock_handle_t      hsock, 
 	void               *pOutBuffer, 
 	usock_size_t        buflen
@@ -255,7 +272,7 @@ usock_ssize_t usock_recv(
 * \param buflen  - The number bytes to be sent.
 * \return        - Number of bytes sent.
 */
-usock_ssize_t usock_send(
+USOCK_INTERFACE usock_ssize_t USOCK_CONVENTION usock_send(
 	usock_handle_t      hsock, 
 	const void         *pBuffer, 
 	usock_size_t        buflen
@@ -270,7 +287,7 @@ usock_ssize_t usock_send(
 * \param pOutClientInfo - Handle to the sender of this message.
 * \return               - Number of bytes received.
 */
-usock_ssize_t usock_recv_from(
+USOCK_INTERFACE usock_ssize_t USOCK_CONVENTION usock_recv_from(
 	usock_handle_t     hsock, 
 	void              *pBuffer,
 	usock_size_t       len,
@@ -288,7 +305,7 @@ usock_ssize_t usock_recv_from(
 *                  (returned by usock_recv_from).
 * \return        - Number of bytes sent.
 */
-usock_ssize_t usock_send_to(
+USOCK_INTERFACE usock_ssize_t USOCK_CONVENTION usock_send_to(
 	usock_handle_t     hsock,
 	const void        *pBuffer,
 	usock_size_t       len,
@@ -300,7 +317,7 @@ usock_ssize_t usock_send_to(
 * Close the socket connection.
 * \param hsock - The socket handle (returned by usock_create_socket).
 */
-void usock_close_socket(
+USOCK_INTERFACE void USOCK_CONVENTION usock_close_socket(
 	usock_handle_t     socket
 );
 
@@ -308,7 +325,7 @@ void usock_close_socket(
 * Release the memory associated with this socket.
 * \param hsock - The socket handle (returned by usock_create_socket).
 */
-void usock_free_socket(
+USOCK_INTERFACE void USOCK_CONVENTION usock_free_socket(
 	usock_handle_t     hsock
 );
 

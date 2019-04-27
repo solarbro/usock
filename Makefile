@@ -13,15 +13,19 @@ builddir = build
 
 #build the automated test tool
 usock-test: test/usock-test.o
-	$(TC) -o $@ $^ $(CCFLAGS) -lpthread
+	$(TC) -o $@ $^ $(CXXFLAGS) -lpthread
 
 #build the full usock library into an archive
 usock.a: $(obj)
 	ar r $@ $^ 
 
-#build only the base usock library with none of the utils
+#build only the core usock library with none of the utils
 usock-lite.a: $(obj)
 	ar r $@ src/usock.o
+
+#build the core library as a shared object
+usock-lite.so: $(csrc)
+	$(CC) -o $@ $^ $(CFLAGS) -shared -fPIC
 
 #build the specified test
 #These commands don't need to be used manually.
@@ -52,3 +56,4 @@ clean:
 	rm -f usock-test
 	rm -f usock.a
 	rm -f usock-lite.a
+	rm -f usock-lite.so

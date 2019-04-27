@@ -17,6 +17,7 @@ use ```make``` with one of the following arguments:
 | | Build the usock integration test tool. |
 | usock.a | Build an archive of the full usock library, including all utilities. | 
 | usock-lite.a | Build an archive of only the core usock library. | 
+| usock-lite.so | Build a shared library of the core usock library. |
 | clean | Cleanup build artefacts. |
 
 ## How to test
